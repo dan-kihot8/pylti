@@ -49,6 +49,7 @@ class LTI(object):
         self.nickname = self.name
 
         # Set app to current_app if not specified
+
         if not self.lti_kwargs['app']:
             self.lti_kwargs['app'] = current_app
 
@@ -125,6 +126,12 @@ class LTI(object):
         app_config = self.lti_kwargs['app'].config
         config = app_config.get('PYLTI_CONFIG', dict())
         consumers = config.get('consumers', dict())
+        if not consumers:
+            secret = session["secret"]
+            session.pop('secret', None)
+            consumers = {self.key: { 
+            "secret": secret
+        }}
         return consumers
 
     @property
@@ -172,6 +179,7 @@ class LTI(object):
         """
         log.debug("is_role %s", role)
         roles = session['roles'].split(',')
+        roles = map(lambda x:x.lower(),roles)
 
         app_config = self.lti_kwargs['app'].config
         config = app_config.get('PYLTI_CONFIG', dict())
@@ -180,6 +188,7 @@ class LTI(object):
 
         if role in LTI_ROLES:
             role_list = LTI_ROLES[role]
+            role_list = map(lambda x:x.lower(),role_list)
             # find the intersection of the roles
             roles = set(role_list) & set(roles)
             is_user_role_there = len(roles) >= 1
@@ -189,6 +198,7 @@ class LTI(object):
             )
             return is_user_role_there
         else:
+            print "Unknown role {}".format(role)
             raise LTIException("Unknown role {}.".format(role))
 
     def _check_role(self):
@@ -236,6 +246,7 @@ class LTI(object):
         else:
             params = flask_request.args.to_dict()
         log.debug(params)
+        session["oauth_consumer_key"] = params.get("oauth_consumer_key")
 
         log.debug('verify_request?')
         try:

@@ -64,6 +64,7 @@ class LTIOAuthServer(oauth2.Server):
         """
         super(LTIOAuthServer, self).__init__(signature_methods)
         self.consumers = consumers
+        
 
     def lookup_consumer(self, key):
         """
